@@ -1,0 +1,6 @@
+{
+  "name": "picard-web",
+  "pages_build_output_dir": "dist",
+  "compatibility_date": "2025-03-07",
+  "compatibility_flags": ["nodejs_compat"]
+}
