@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 
 interface Props {
   onPhoto: (dataUrl: string) => void
@@ -22,28 +22,42 @@ export default function PhotoCapture({ onPhoto }: Props) {
   const startCamera = useCallback(async () => {
     setError('')
     try {
+      // ใช้ constraints แบบ simple สำหรับ iOS compatibility
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode: 'user' },
       })
       streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        videoRef.current.play()
-      }
-      setStreaming(true)
+      setStreaming(true) // render video element ก่อน แล้วค่อย attach ใน useEffect
     } catch {
       setError('ไม่สามารถเปิดกล้องได้ กรุณาอนุญาต permission ก่อนนะคะ')
     }
   }, [])
 
+  // attach stream หลัง video element mount บน DOM — วิธีนี้ถูกต้องสำหรับ iOS Safari
+  useEffect(() => {
+    const video = videoRef.current
+    const stream = streamRef.current
+    if (!streaming || !video || !stream) return
+
+    video.srcObject = stream
+    video.onloadedmetadata = () => {
+      video.play().catch(() => {})
+    }
+
+    return () => {
+      video.onloadedmetadata = null
+    }
+  }, [streaming])
+
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop())
+    streamRef.current = null
     setStreaming(false)
   }, [])
 
   const capture = useCallback(() => {
     const video = videoRef.current
-    if (!video) return
+    if (!video || !video.videoWidth) return
     const canvas = document.createElement('canvas')
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
@@ -86,6 +100,7 @@ export default function PhotoCapture({ onPhoto }: Props) {
             ref={videoRef}
             className="w-full rounded-2xl bg-black"
             playsInline
+            autoPlay
             muted
           />
           <div className="flex gap-3">
