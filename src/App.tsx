@@ -1,20 +1,22 @@
 import { useState } from 'react'
+import { LanguageProvider, useLanguage } from './i18n/LanguageContext'
 import PhotoCapture from './components/PhotoCapture'
 import PhotoCrop from './components/PhotoCrop'
 import PrintLayout from './components/PrintLayout'
 
 type Step = 'capture' | 'crop' | 'layout'
 
-const STEPS: { key: Step; label: string }[] = [
-  { key: 'capture', label: '1. เลือกรูป' },
-  { key: 'crop',    label: '2. Crop' },
-  { key: 'layout',  label: '3. Download' },
-]
-
-export default function App() {
+function AppContent() {
+  const { lang, t, toggle } = useLanguage()
   const [step, setStep] = useState<Step>('capture')
   const [rawPhoto, setRawPhoto] = useState('')
   const [croppedPhoto, setCroppedPhoto] = useState('')
+
+  const STEPS: { key: Step; label: string }[] = [
+    { key: 'capture', label: t.step.capture },
+    { key: 'crop',    label: t.step.crop },
+    { key: 'layout',  label: t.step.download },
+  ]
 
   const reset = () => {
     setRawPhoto('')
@@ -29,16 +31,31 @@ export default function App() {
         <div className="flex items-center gap-2">
           <span className="text-2xl">📸</span>
           <span className="font-bold text-xl tracking-tight">Picard</span>
-          <span className="text-gray-500 text-sm ml-1">ถ่ายรูปติดบัตร</span>
+          <span className="text-gray-500 text-sm ml-1">{t.appSubtitle}</span>
         </div>
-        <a
-          href="https://thana.in.th"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-500 hover:text-gray-300 text-sm transition-colors"
-        >
-          thana.in.th
-        </a>
+        <div className="flex items-center gap-3">
+          {/* Language toggle */}
+          <button
+            onClick={toggle}
+            className="flex items-center gap-0.5 text-sm font-medium rounded-lg overflow-hidden border border-gray-700"
+            aria-label="Toggle language"
+          >
+            <span className={`px-2.5 py-1 transition-colors ${lang === 'th' ? 'bg-orange-500 text-white' : 'text-gray-400 hover:text-gray-200'}`}>
+              TH
+            </span>
+            <span className={`px-2.5 py-1 transition-colors ${lang === 'en' ? 'bg-orange-500 text-white' : 'text-gray-400 hover:text-gray-200'}`}>
+              EN
+            </span>
+          </button>
+          <a
+            href="https://thana.in.th"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-500 hover:text-gray-300 text-sm transition-colors"
+          >
+            thana.in.th
+          </a>
+        </div>
       </header>
 
       {/* Step indicator */}
@@ -102,8 +119,16 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-gray-800 px-6 py-4 text-center text-gray-600 text-xs">
-        Picard Web — ถ่ายรูปติดบัตรออนไลน์ ฟรี ไม่เก็บรูปของคุณ ทุกอย่างทำงานใน browser
+        Picard Web — {t.footer}
       </footer>
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   )
 }

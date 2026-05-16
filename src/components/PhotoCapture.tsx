@@ -1,10 +1,12 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
+import { useLanguage } from '../i18n/LanguageContext'
 
 interface Props {
   onPhoto: (dataUrl: string) => void
 }
 
 export default function PhotoCapture({ onPhoto }: Props) {
+  const { t } = useLanguage()
   const fileRef = useRef<HTMLInputElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [streaming, setStreaming] = useState(false)
@@ -22,18 +24,16 @@ export default function PhotoCapture({ onPhoto }: Props) {
   const startCamera = useCallback(async () => {
     setError('')
     try {
-      // ใช้ constraints แบบ simple สำหรับ iOS compatibility
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user' },
       })
       streamRef.current = stream
-      setStreaming(true) // render video element ก่อน แล้วค่อย attach ใน useEffect
+      setStreaming(true)
     } catch {
-      setError('ไม่สามารถเปิดกล้องได้ กรุณาอนุญาต permission ก่อนนะคะ')
+      setError(t.capture.error)
     }
-  }, [])
+  }, [t.capture.error])
 
-  // attach stream หลัง video element mount บน DOM — วิธีนี้ถูกต้องสำหรับ iOS Safari
   useEffect(() => {
     const video = videoRef.current
     const stream = streamRef.current
@@ -68,7 +68,7 @@ export default function PhotoCapture({ onPhoto }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <h2 className="text-2xl font-bold">เลือกรูปถ่าย</h2>
+      <h2 className="text-2xl font-bold">{t.capture.heading}</h2>
 
       {!streaming ? (
         <div className="flex flex-col sm:flex-row gap-4 w-full max-w-sm">
@@ -77,14 +77,14 @@ export default function PhotoCapture({ onPhoto }: Props) {
             className="flex-1 flex flex-col items-center gap-2 p-6 rounded-2xl border-2 border-dashed border-gray-600 hover:border-orange-400 hover:bg-orange-400/10 transition-colors cursor-pointer"
           >
             <span className="text-4xl">🖼️</span>
-            <span className="font-medium">เลือกรูปจาก device</span>
+            <span className="font-medium">{t.capture.fromDevice}</span>
           </button>
           <button
             onClick={startCamera}
             className="flex-1 flex flex-col items-center gap-2 p-6 rounded-2xl border-2 border-dashed border-gray-600 hover:border-orange-400 hover:bg-orange-400/10 transition-colors cursor-pointer"
           >
             <span className="text-4xl">📷</span>
-            <span className="font-medium">ถ่ายจากกล้อง</span>
+            <span className="font-medium">{t.capture.fromCamera}</span>
           </button>
           <input
             ref={fileRef}
@@ -108,13 +108,13 @@ export default function PhotoCapture({ onPhoto }: Props) {
               onClick={capture}
               className="px-8 py-3 bg-orange-500 hover:bg-orange-400 rounded-xl font-bold text-lg transition-colors"
             >
-              📸 ถ่าย
+              {t.capture.shoot}
             </button>
             <button
               onClick={stopCamera}
               className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl transition-colors"
             >
-              ยกเลิก
+              {t.capture.cancel}
             </button>
           </div>
         </div>
